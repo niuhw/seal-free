@@ -14,6 +14,7 @@ class Worker extends Actor with ActorLogging {
 object Worker extends App {
   val workerSystem = ActorSystem.create("workerSystem")
   val workerActorRef = workerSystem.actorOf(Props[Worker], "worker-actor")
+//  val log = new Logging()
 //  log.info(s"worker-actor")
   workerActorRef ! "other"
 
