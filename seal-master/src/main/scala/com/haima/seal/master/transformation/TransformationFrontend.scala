@@ -1,45 +1,45 @@
-//package com.haima.seal.master.transformation
-//
-//import java.util.concurrent.atomic.AtomicInteger
-//
-//import akka.actor.{Actor, ActorRef, ActorSystem, Props, Terminated}
-//import akka.pattern.ask
-//import akka.util.Timeout
-//import com.typesafe.config.ConfigFactory
-//
-//import scala.concurrent.duration._
-//import scala.language.postfixOps
-//
-///**
-//  * @author: huawei niu
-//  * @version:
-//  * @createDate ：2018/8/6
-//  * @desc:
-//  */
-//class TransformationFrontend extends Actor {
-//
-//  var backends = IndexedSeq.empty[ActorRef]
-//  var jobCounter = 0
-//
-//  def receive = {
-//    case job: TransformationJob if backends.isEmpty =>
-//      sender() ! JobFailed("Service unavailable, try again later", job)
-//
-//    case job: TransformationJob =>
-//      jobCounter += 1
-//      backends(jobCounter % backends.size) forward job
-//
-//    case BackendRegistration if !backends.contains(sender()) =>
-//      context watch sender()
-//      backends = backends :+ sender()
-//
-//    case Terminated(a) =>
-//      backends = backends.filterNot(_ == a)
-//  }
-//}
-//
-////#frontend
-//
+package com.haima.seal.master.transformation
+
+import java.util.concurrent.atomic.AtomicInteger
+
+import akka.actor.{Actor, ActorRef, ActorSystem, Props, Terminated}
+import akka.pattern.ask
+import akka.util.Timeout
+import com.typesafe.config.ConfigFactory
+
+import scala.concurrent.duration._
+import scala.language.postfixOps
+
+/**
+  * @author: huawei niu
+  * @version:
+  * @createDate ：2018/8/6
+  * @desc:
+  */
+class TransformationFrontend extends Actor {
+
+  var backends = IndexedSeq.empty[ActorRef]
+  var jobCounter = 0
+
+  def receive = {
+    case job: TransformationJob if backends.isEmpty =>
+      sender() ! JobFailed("Service unavailable, try again later", job)
+
+    case job: TransformationJob =>
+      jobCounter += 1
+      backends(jobCounter % backends.size) forward job
+
+    case BackendRegistration if !backends.contains(sender()) =>
+      context watch sender()
+      backends = backends :+ sender()
+
+    case Terminated(a) =>
+      backends = backends.filterNot(_ == a)
+  }
+}
+
+//#frontend
+
 //object TransformationFrontend {
 //  def main(args: Array[String]): Unit = {
 //    // Override the configuration of the port when specified as program argument

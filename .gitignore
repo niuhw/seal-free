@@ -4,3 +4,10 @@
 *.iml
 build
 docs
+.classpath
+.project
+seal-master/bin
+seal-master/out
+seal-worker/out
+seal-worker/bin
+.settings

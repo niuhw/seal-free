@@ -1,4 +1,5 @@
 dependencies {
     compile group: 'com.typesafe.akka', name: 'akka-actor_2.11', version: '2.5.14'
+    compile group: 'com.typesafe.akka', name: 'akka-cluster_2.11', version: '2.5.14'
     testCompile group: 'com.typesafe.akka', name: 'akka-stream-testkit_2.11', version: '2.5.14'
 }

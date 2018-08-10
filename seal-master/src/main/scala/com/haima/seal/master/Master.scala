@@ -1,13 +1,11 @@
 package com.haima.seal.master
 
-import akka.actor.ActorSystem
+import akka.actor.{Actor, ActorRef, ActorSystem}
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.server.Directives.pathPrefix
 import akka.http.scaladsl.server.Route
-import akka.http.scaladsl.server.RouteConcatenation._
 import akka.stream.ActorMaterializer
-import com.haima.seal.master.source.SourceController
-import com.haima.seal.master.supervisor.SupervisorController
+import com.haima.seal.master.supervisor.{SupervisorActor, SupervisorController}
 
 import scala.concurrent.Await
 import scala.concurrent.duration.Duration
@@ -73,35 +71,46 @@ import scala.concurrent.duration.Duration
   * @author Huawei Niu
   * @since 1.6
   */
-object Master extends App with SupervisorController with SourceController {
+class MasterActor extends Actor{
+  @throws[Exception](classOf[Exception])
+  override def preStart(): Unit = {
+    /*
+      Connect to remote actor. The following are the different parts of actor path
+      akka.tcp : enabled-transports  of remote_application.conf
+      RemoteSystem : name of the actor system used to create remote actor
+      127.0.0.1:5150 : host and port
+      user : The actor is user defined
+      remote : name of the actor, passed as parameter to system.actorOf call
+     */
+    val remoteActor = context.actorSelection("akka.tcp://workerSystem@127.0.0.1:5150/user/worker-actor")
+    println("That 's remote:" + remoteActor)
+    remoteActor ! "hi"
+  }
+  override def receive: Receive = {
+
+    case msg:String => {
+      println("got message from remote" + msg)
+    }
+  }
+}
+object Master extends App with SupervisorController {
 
 
   implicit val actorSystem = ActorSystem(name = "MasterSystem")
   implicit val materializer = ActorMaterializer()
   // 这个在最后的 future flatMap/onComplete 里面会用到
   implicit val executionContext = actorSystem.dispatcher
+
+
+  val supervisorActor: ActorRef = actorSystem.actorOf(SupervisorActor.props,"supervisorActor")
+
   lazy val apiRoutes: Route = pathPrefix("api") {
-    supervisorRoutes ~ sourceRoutes
+    supervisorRoutes
+//    ~ sourceRoutes
   }
 
   Http().bindAndHandle(apiRoutes, "localhost", 8080)
-  //    log.info("Starting the HTTP server at 8080")
+  println(s"Server online at http://localhost:8080/")
   Await.result(actorSystem.whenTerminated, Duration.Inf)
 
-
-  //  private def startup(ports: Seq[String]): Unit = {
-  //    ports foreach { port =>
-  //      // Override the configuration of the port
-  //      val config = ConfigFactory.parseString(
-  //        s"""
-  //        akka.remote.netty.tcp.port=$port
-  //        akka.remote.artery.canonical.port=$port
-  //        """).withFallback(ConfigFactory.load())
-  //
-  //      // Create an Akka system
-  //      val system = ActorSystem("ClusterSystem", config)
-  //      // Create an actor that handles cluster domain events
-  //      system.actorOf(Props[SimpleClusterListener], name = "clusterListener")
-  //    }
-  //  }
 }

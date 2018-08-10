@@ -1,6 +1,9 @@
 package com.haima.seal.worker
 
+import java.io.File
+
 import akka.actor.{Actor, ActorLogging, ActorSystem, Props}
+import com.typesafe.config.ConfigFactory
 
 class Worker extends Actor with ActorLogging {
 
@@ -12,13 +15,19 @@ class Worker extends Actor with ActorLogging {
 }
 
 object Worker extends App {
-  val workerSystem = ActorSystem.create("workerSystem")
+
+  //get the configuration file from classpath
+  val configFile = getClass.getClassLoader.getResource("remote_application.conf").getFile
+  //parse the config
+  val config = ConfigFactory.parseFile(new File(configFile))
+  val workerSystem = ActorSystem.create("workerSystem",config)
   val workerActorRef = workerSystem.actorOf(Props[Worker], "worker-actor")
+  println(workerActorRef.path.toString)
 //  val log = new Logging()
 //  log.info(s"worker-actor")
-  workerActorRef ! "other"
+//  workerActorRef ! "other"
 
-  //  println(">>> Press ENTER to exit <<<")
+    println(">>> remote worker is ready <<<")
   //  try StdIn.readLine()
   //  finally system.terminate()
 
